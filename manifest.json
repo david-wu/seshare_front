@@ -1,0 +1,21 @@
+{
+
+  "name": "seshare",
+  "manifest_version": 2,
+  "description": "Session Sharing",
+  "version": "1.0",
+
+  "permissions": [
+    "identity",
+    "cookies",
+    "*://*/"
+  ],
+  "browser_action": {
+    "default_title": "Share",
+    "default_icon": "mini_cookie.png",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "scripts": ["background.js"]
+  }
+}
