@@ -9,6 +9,10 @@
 	background-color: #FFCCAA;
 }
 
+.nav-element {
+	outline:#AA6639 solid 2px;
+}
+
 body {
 	min-width: 357px;
 	min-height: 500px;

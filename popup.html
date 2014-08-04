@@ -5,6 +5,9 @@
     <script src="./vendor/underscore-min.js"></script>
     <script src="./vendor/jquery-2.1.1.min.js"></script>
     <script src="./vendor/serializejson.js"></script>
+    <script src="models/model.js"></script>
+    <script src="models/userModel.js"></script>
+    <script src="models/accountModel.js"></script>
     <script src="cookie.js"></script>
     <script src="seshare.js"></script>
     <script src="./vendor/underscore-min.js"></script>
@@ -17,14 +20,12 @@
     <div id='nav-bar'>
       <span class='nav-element cookie-mart'>CookieMart</span>
       <span class='nav-element share-cookie'>ShareCookie</span>
-      <span class='nav-element my-cookies'>MyCookies</span>
-      <div id='account-nav'>
-        <span class='nav-element sign-in-up'>SignIn/Up</span>
+      <span class='nav-element about'>LeaderBoard</span>
+      <div id='nav-bar-account'>
       </div>
     </div>
 
     <div id='main'>
-
     </div>
 
     <div class="error-box">
@@ -37,11 +38,25 @@
       </div>
     </div>
 
-
   </body>
 
 
   <div id='container' style='display: none;'>
+
+    <div id="template-about">
+      about
+    </div>
+
+    <div id="template-cookie-mart">
+      Welcome to the CookieMart
+    </div>
+
+    <div id="template-share-cookie">
+    </div>
+
+    <div id="template-my-cookies">
+      my cookie
+    </div>
 
     <div id="template-sign-up-in">
       <div class="row">
@@ -58,6 +73,6 @@
     </div>
 
   </div>
-  
+
 </html>
 

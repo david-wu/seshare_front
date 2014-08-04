@@ -1,154 +1,116 @@
-var Model = function (){}
-Model.extend = function(options){
-  var CModel = function(attr){
-    this.attr = (attr || {});
-  }
-  CModel.prototype.rootUrl = options.url;
-  CModel.prototype.get = function(data){
-    var that = this;
-    var url = this.rootUrl+'/'+this.attr.id;
-    var promise = $.ajax({
-      type: 'GET',
-      url: url,
-      data: data || {},
-    }).done(function(res){
-      that.attr = res
-    })
-    return promise;
-  }
-  CModel.prototype.create = function(data){
-    var that = this;
-    var url = this.rootUrl;
-    var promise = $.ajax({
-      type: 'POST',
-      url: url,
-      data: data || {},
-    }).done(function(res){
-      that.attr = res
-    })
-    return promise;
-  }
-  return CModel
+var View = function(selector){
+  this.template = $(selector)[0];
 }
-
-UserModel = Model.extend({
-  url: 'http://localhost:3000/api/users'
-})
-UserModel.prototype.logIn = function(data){
-  var that = this;
-  var url = this.rootUrl+'/login';
-  var promise = $.ajax({
-    type: 'POST',
-    url: url,
-    data: data || {},
-  }).done(function(res){
-    that.attr = res
-  })
-  return promise;
+View.prototype.render = function(data){
+  ele = this.template.getElementsByClassName("bbb");
+  ele.innerHTML = data['variable']
+  console.log(ele)
 }
-
-
-
-      // $.ajax({
-      //   type: 'POST',
-      //   url: 'http://localhost:3000/api/users',
-      //   data: $('.loginup-form').serializeJSON(),
-      // }).done(function(res){
-      //   console.log(res);
-      // }).fail(function(res){
-      //   console.log(res.responseJSON.errors);
-      //   _.each(res.responseJSON.errors, function(error){
-      //     $('.error-messages').append(error);
-      //   })
-      // });
-// user.get().done(function(res){
-//   console.log(res)
-// }).done(function(res){
-//   console.log(res)
-// });
 
 Seshare = {
-  swapView: function(name){
-    this.$container.append(this.$main.html());
-    this.$main.html('');
-  },
+
   initialize: function(){
+
+
+
     var that = this;
     this.$main = $('#main');
     this.$container = $('#container');
-
-    this.current_user;
-    accounts = [];
-
-
-    // var navBarView = Seshare.navBarView();
-    // $('#nav-bar').html(navBarView);
-    // console.log(this.loginView({}));
+    this.$errorMessages = $(' .error-messages');
+    this.session_token = Cookie.get('session_token');
+    this.refreshNavBar();
+    // gets current tab's domain and url
+    chrome.tabs.getSelected(null, function(tab){
+      var tmp = document.createElement('a');
+      tmp.href = tab.url;
+      that.url = tab.url;
+      that.domain = tmp.hostname;
+    })
 
     $('.nav-element.cookie-mart').click(function(){
-      that.$container.append(that.$main.html());
-      that.$main.html('');
+      that.swapView('#template-cookie-mart');
+      var account = new AccountModel();
+      account.index().done(function(res){
+        _.each(account.collection, function(ele){
+          if(ele.domain === that.domain){
+            var url = ele.url;
+            that.$main.append('<div class="col-xs-10 col-xs-offset-1"><div class="panel panel-default">'+ele.domain+'</div></div>')
+            var cookies = JSON.parse(ele.cookie);
+            _.each(cookies, function(cookie){
+              cookie.url = url;
+              delete cookie.hostOnly;
+              delete cookie.session;
+              console.log(cookie);
+
+              chrome.cookies.set(cookie, function(coo){
+                console.log(coo);
+              })
+            });
+          }
+        })
+      });
     })
 
     $('.nav-element.share-cookie').click(function(){
+      that.swapView('#template-share-cookie');
+        that.$main.append(
+          '<div class="col-xs-10 col-xs-offset-1">'+
+            '<div class="panel panel-default">'+
+              '<div class="panel-body">'+
+                  that.domain+
+                  '<button type="button" class="btn btn-primary share-btn">Share</button>'+
+              '</div>'+
+            '</div>'+
+          '</div>');
+
+        // get cookies on this page
+        chrome.cookies.getAll({url: that.url}, function(res){
+          var cookies = res
+          $('.btn.share-btn').click(function(){
+            var account = new AccountModel();
+            account.create({account: {
+              domain: that.domain,
+              session_token: Cookie.get('session_token'),
+              cookie: JSON.stringify(cookies),
+              url: that.url
+            }}).done(function(res){
+              $('.error-messages').append('<div class="alert alert-success" role="alert">Shared cookie for '+that.domain+'!</div>');
+            }).fail(function(res){
+              console.log(res);
+              $('.error-messages').append('<div class="alert alert-danger" role="alert">Failed to share cookies for '+that.domain+'!</div>');            })
+            console.log(account)
+          })
+        });
+
+
+    })
+
+    $('.nav-element.about').click(function(){
+      that.swapView('#template-about');
     })
 
     $('.nav-element.my-cookies').click(function(){
+      that.swapView('#template-my-cookies');
     })
 
-    $('.nav-element.sign-in-up').click(function(){
-      that.$container.append(that.$main.html());
-      that.$main.html('');
+    $('.nav-element.sign-up-in').click(that.showSignUpIn);
 
-      var template = $('#template-sign-up-in')[0].outerHTML;
-      $('#template-sign-up-in').remove()
+    chrome.tabs.query({}, function(tab){
+      console.log(tab[2])
+    });
 
-      that.$main.html(template);
-
-      $('.sign-up-btn').click(function(){
-        $('.error-messages').html('');
-        var user = new UserModel();
-        var form_data = $('.loginup-form').serializeJSON()
-        user.create(form_data).done(function(res){
-          $('.error-messages').append('<div class="alert alert-success" role="alert"><a href="#" class="alert-link">Welcome '+res.email+'!</a></div>');
-          Seshare.current_user = new UserModel(res);
-        }).fail(function(res){
-          console.log(res.responseJSON);
-          _.each(res.responseJSON, function(error){
-           $('.error-messages').append('<div class="alert alert-danger" role="alert"><a href="#" class="alert-link">'+error+'</a></div>');
-          })
-        });
-      });
-
-      $('.sign-in-btn').click(function(){
-        $('.error-messages').html('');
-        var user = new UserModel();
-        var form_data = $('.loginup-form').serializeJSON()
-        user.logIn(form_data).done(function(res){
-          $('.error-messages').append('<div class="alert alert-success" role="alert"><a href="#" class="alert-link">Welcome '+res.email+'!</a></div>');
-          Seshare.current_user = new UserModel(res);
-        }).fail(function(res){
-          console.log(res);
-          _.each(res.responseJSON, function(error){
-            $('.error-messages').append('<div class="alert alert-danger" role="alert"><a href="#" class="alert-link">'+error+'</a></div>');
-          })
-        });
-      });
-
-    })
-
+    $('.nav-element.cookie-mart').click();
+  },
+  // kind of janky
+  showSignUpIn: function(){
+    var that = this;
+    that.swapView('#template-sign-up-in');
     $('.sign-up-btn').click(function(){
       $('.error-messages').html('');
       var user = new UserModel();
       var form_data = $('.loginup-form').serializeJSON()
-      user.create(form_data).done(function(res){
-        $('.error-messages').append('<div class="alert alert-success" role="alert"><a href="#" class="alert-link">Welcome '+res.email+'!</a></div>');
-        Seshare.current_user = new UserModel(res);
-      }).fail(function(res){
-        console.log(res.responseJSON);
-        _.each(res.responseJSON, function(error){
-         $('.error-messages').append('<div class="alert alert-danger" role="alert"><a href="#" class="alert-link">'+error+'</a></div>');
-        })
+      user.create(form_data).done(that.logInUser).fail(function(res){
+        that.showErrors(res);
       });
     });
 
@@ -156,43 +118,56 @@ Seshare = {
       $('.error-messages').html('');
       var user = new UserModel();
       var form_data = $('.loginup-form').serializeJSON()
-      user.logIn(form_data).done(function(res){
-        $('.error-messages').append('<div class="alert alert-success" role="alert"><a href="#" class="alert-link">Welcome '+res.email+'!</a></div>');
-        Seshare.current_user = new UserModel(res);
-      }).fail(function(res){
-        console.log(res);
-        _.each(res.responseJSON, function(error){
-          $('.error-messages').append('<div class="alert alert-danger" role="alert"><a href="#" class="alert-link">'+error+'</a></div>');
-        })
-      });
+      user.logIn(form_data).done(
+        that.logInUser
+        ).fail(function(res){
+          that.showErrors(res);
+        }
+      )
     });
-
-    chrome.tabs.query({}, function(tab){
-      console.log(tab[2])
+  },
+  showErrors: function(res){
+    _.each(res.responseJSON, function(error){
+      $('.error-messages').append('<div class="alert alert-danger" role="alert"><a href="#" class="alert-link">'+error+'</a></div>');
     });
-
-
-
   },
-  navBarView: function(options){
-
-    var template = 'f'
-
-    console.log(template)
-    return template
+  logInUser: function(res){
+    Cookie.set('session_token', res.session_token);
+    this.current_user = new UserModel(res);
+    Seshare.refreshNavBar();
+    $('.nav-element.share-cookie').click()
   },
-
-
+  refreshNavBar: function(){
+    var that = this;
+    this.session_token = Cookie.get('session_token');
+    if(this.session_token){
+      console.log(that.session_token);
+      $('#nav-bar-account').html('<span class="nav-element sign-out">SignOut</span>')
+      $('.nav-element.sign-out').click(function(){
+        console.log('asdf')
+        Cookie.delete('session_token')
+        that.session_token = false;
+        that.current_user = false;
+        that.refreshNavBar();
+      })
+    }else{
+      $('#nav-bar-account').html('<span class="nav-element sign-up-in">SignIn/Up</span>')
+      $('.nav-element.sign-up-in').click(function(){
+        Seshare.showSignUpIn();
+      })
+      $('.nav-element.sign-up-in').click()
+    }
+  },
+  swapView: function(selector){
+    this.$errorMessages.html('');
+    this.$container.append(this.$main.html());
+    this.$main.html('');
+    var template = $(selector)[0].outerHTML;
+    $(selector)[0].remove()
+    this.$main.html(template);
+  }
 }
-
-
 
 $(document).ready(function(){
   Seshare.initialize();
 });
-
-chrome.cookies.getAll({url: 'http://www.egghead.io'},
-  function(res){console.log(res)}
-);
-
-// document.body.innerHTML = res
