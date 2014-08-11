@@ -10,7 +10,11 @@ View.prototype.render = function(data){
 Seshare = {
 
   initialize: function(){
-
+      AccountModel.find(3).done(function(res){
+        console.log(res)
+      })
+  },
+  initialize2: function(){
 
 
     var that = this;
