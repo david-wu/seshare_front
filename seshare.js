@@ -10,12 +10,6 @@ View.prototype.render = function(data){
 Seshare = {
 
   initialize: function(){
-      AccountModel.find(3).done(function(res){
-        console.log(res)
-      })
-  },
-  initialize2: function(){
-
 
     var that = this;
     this.$main = $('#main');
@@ -44,10 +38,8 @@ Seshare = {
               cookie.url = url;
               delete cookie.hostOnly;
               delete cookie.session;
-              console.log(cookie);
 
               chrome.cookies.set(cookie, function(coo){
-                console.log(coo);
               })
             });
           }
@@ -81,7 +73,8 @@ Seshare = {
               $('.error-messages').append('<div class="alert alert-success" role="alert">Shared cookie for '+that.domain+'!</div>');
             }).fail(function(res){
               console.log(res);
-              $('.error-messages').append('<div class="alert alert-danger" role="alert">Failed to share cookies for '+that.domain+'!</div>');            })
+              $('.error-messages').append('<div class="alert alert-danger" role="alert">Failed to share cookies for '+that.domain+'!</div>');
+            })
             console.log(account)
           })
         });
@@ -97,11 +90,7 @@ Seshare = {
       that.swapView('#template-my-cookies');
     })
 
-    $('.nav-element.sign-up-in').click(that.showSignUpIn);
-
-    chrome.tabs.query({}, function(tab){
-      console.log(tab[2])
-    });
+    // $('.nav-element.sign-up-in').click(that.showSignUpIn);
 
     $('.nav-element.cookie-mart').click();
   },
@@ -129,6 +118,7 @@ Seshare = {
         }
       )
     });
+    console.log('asdf')
   },
   showErrors: function(res){
     _.each(res.responseJSON, function(error){
@@ -159,13 +149,14 @@ Seshare = {
       $('.nav-element.sign-up-in').click(function(){
         Seshare.showSignUpIn();
       })
-      $('.nav-element.sign-up-in').click()
+      // $('.nav-element.sign-up-in').click()
     }
   },
   swapView: function(selector){
     this.$errorMessages.html('');
     this.$container.append(this.$main.html());
     this.$main.html('');
+
     var template = $(selector)[0].outerHTML;
     $(selector)[0].remove()
     this.$main.html(template);

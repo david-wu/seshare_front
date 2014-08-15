@@ -1,27 +1,14 @@
 var Model = function (){}
-Model.extend = function(url){
+Model.extend = function(rootUrl){
 
   var CModel = function(attr){
     this.attr = (attr || {});
+    this.rootUrl = rootUrl;
   }
 
-  CModel.find = function(id, data){
-    var promise = $.ajax({
-      type: 'GET',
-      url: url,
-      data: data || {},
-    })
-    console.log(promise);
-    return promise;
-  }
-
-  CModel.prototype.rootUrl = url;
-
-  // Fetches CModel with attr.id and returns promise
-  // cModel.get({token: 'asd2fa13sdf', timeout: 23})
   CModel.prototype.get = function(data){
     var that = this;
-    var url = this.rootUrl + '/' + this.attr.id;
+    var url = rootUrl + '/' + this.attr.id;
     var promise = $.ajax({
       type: 'GET',
       url: url,
